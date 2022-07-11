@@ -5,6 +5,10 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #pragma warning(pop)
+TODO: вывод текста https://gist.github.com/benob/92ee64d9ffcaa5d3be95edbf4ded55f2
+мапинг клавиш
+//-----------------------------------------------------------------------------
+Engine* currentEngine = nullptr;
 //-----------------------------------------------------------------------------
 bool Engine::Create(const EngineCreateInfo& createInfo)
 {
@@ -34,11 +38,13 @@ bool Engine::Create(const EngineCreateInfo& createInfo)
 	m_startTime = std::chrono::high_resolution_clock::now();
 
 	SDL_Log("Engine Init Success");
+	currentEngine = this;
 	return true;
 }
 //-----------------------------------------------------------------------------
 void Engine::Destroy()
 {
+	currentEngine = nullptr;
 	for (auto it = m_spriteCache.begin(); it != m_spriteCache.end(); it++)
 		SDL_DestroyTexture(it->second.texture);
 	m_spriteCache.clear();

@@ -94,3 +94,5 @@ private:
 		char c[2];
 	} m_unused;
 };
+
+extern Engine* currentEngine;

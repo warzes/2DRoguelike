@@ -9,7 +9,7 @@
 для каждого элемента своя рендертекстура. то есть например карта рендерится в квадрат 240х240, а например гуи поля боя в 640х480. это позволит делать ретро стиль карты, но при этом нормально выводить большие спрайты в бою или текст в диалогах.
 */
 //-----------------------------------------------------------------------------
-bool GameInit(Engine* engine);
+bool GameInit();
 void GameUpdate(float deltaTime);
 void GameRender();
 void GameClose();
@@ -26,7 +26,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 	}; };
 	if (engine.Create(getConfig()))
 	{
-		if (GameInit(&engine))
+		if (GameInit())
 		{
 			while (engine.Update())
 			{
