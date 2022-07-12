@@ -2,7 +2,7 @@
 #include "Engine.h"
 #pragma warning(push, 0)
 #pragma warning(disable:5045)
-//#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #pragma warning(pop)
 //-----------------------------------------------------------------------------
@@ -33,16 +33,6 @@ bool Engine::Create(const EngineCreateInfo& createInfo)
 		ErrorLog("SDL_Init");
 		return false;
 	}
-
-#if defined(__EMSCRIPTEN__) && 0
-	PrintLog("SDL Image Init");
-	const int imgFlags = IMG_INIT_PNG;
-	if (!(IMG_Init(imgFlags) & imgFlags))
-	{
-		ErrorLog("SDL_image could not initialize! SDL_image Error: " + std::string(IMG_GetError()));
-		return false;
-	}
-#endif
 
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
 	SDL_SetHint(SDL_HINT_RENDER_BATCHING, "1");
@@ -94,9 +84,6 @@ void Engine::Destroy()
 
 	SDL_DestroyRenderer(m_renderer);
 	SDL_DestroyWindow(m_window);
-#if defined(__EMSCRIPTEN__)
-	IMG_Quit();
-#endif
 	SDL_Quit();
 }
 //-----------------------------------------------------------------------------
