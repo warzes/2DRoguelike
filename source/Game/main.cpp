@@ -1,5 +1,14 @@
 ﻿#include "stdafx.h"
 #include "Engine.h"
+
+emrun site/game.html
+
+
+@call emcc - std = c++20 - s USE_SDL = 2 - s USE_SDL_IMAGE = 2 - s SDL2_IMAGE_FORMATS = '["bmp","png"]' - s STB_IMAGE = 1 main.cpp Game.cpp Engine.cpp GameRender.cpp GameUpdate.cpp - o site / game.html --preload - file data - Os - Wall
+
+// без SDL image
+
+
 //-----------------------------------------------------------------------------
 #pragma comment( lib, "SDL2.lib" )
 #pragma comment( lib, "SDL2main.lib" )
@@ -13,6 +22,13 @@ bool GameInit();
 void GameUpdate(float deltaTime);
 void GameRender();
 void GameClose();
+#if defined(__EMSCRIPTEN__)
+inline void OnIterFrame()
+{
+	GameUpdate(currentEngine->GetDeltaTime());
+	GameRender();
+}
+#endif
 //-----------------------------------------------------------------------------
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
@@ -28,11 +44,17 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 	{
 		if (GameInit())
 		{
+#if defined(__EMSCRIPTEN__)
+			// void emscripten_set_main_loop(em_callback_func func, int fps, int simulate_infinite_loop);
+			//emscripten_set_main_loop(OnIterFrame, 60, 1);
+			emscripten_set_main_loop(OnIterFrame, 0, 1);
+#else
 			while (engine.Update())
 			{
 				GameUpdate(engine.GetDeltaTime());
 				GameRender();
 			}
+#endif
 		}
 		GameClose();
 	}
