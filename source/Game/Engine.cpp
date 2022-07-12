@@ -1,10 +1,18 @@
 ﻿#include "stdafx.h"
 #include "Engine.h"
+#if defined(_MSC_VER)
 #pragma warning(push, 0)
 #pragma warning(disable:5045)
+#endif
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#define STB_RECT_PACK_IMPLEMENTATION
+#include "stb_rect_pack.h"
+#define STB_TRUETYPE_IMPLEMENTATION
+#include "stb_truetype.h"
+#if defined(_MSC_VER)
 #pragma warning(pop)
+#endif
 //-----------------------------------------------------------------------------
 Engine* currentEngine = nullptr;
 //-----------------------------------------------------------------------------
@@ -142,23 +150,6 @@ Sprite Engine::CreateSprite(const std::string& fileName, bool inCaches)
 		Sprite sprite;
 		sprite.fileName = fileName;
 
-#if defined(__EMSCRIPTEN__)  && 0// TODO: проверить
-		SDL_Surface* loadedSurface = IMG_Load(fileName.c_str());
-		if (!loadedSurface)
-		{
-			ErrorLog("Image " + fileName + " no open!!!");
-			return {};
-		}
-		sprite.texture = SDL_CreateTextureFromSurface(m_renderer, loadedSurface);
-		if (!sprite.texture)
-		{
-			ErrorLog("Texture " + fileName + " no create!!!");
-			return {};
-	}
-		sprite.width = loadedSurface->w;
-		sprite.height = loadedSurface->h;
-		SDL_FreeSurface(loadedSurface);
-#else
 		int channels;
 		stbi_uc* image = stbi_load(fileName.c_str(), &sprite.width, &sprite.height, &channels, STBI_default);
 		if (!image)
@@ -171,7 +162,6 @@ Sprite Engine::CreateSprite(const std::string& fileName, bool inCaches)
 		sprite.texture = SDL_CreateTexture(m_renderer, fmt, SDL_TEXTUREACCESS_STATIC, sprite.width, sprite.height);
 		SDL_UpdateTexture(sprite.texture, nullptr, (const void*)image, pitch);
 		stbi_image_free(image);
-#endif
 
 		if (inCaches) 
 			m_spriteCache[fileName] = sprite;

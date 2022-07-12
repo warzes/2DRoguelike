@@ -17,7 +17,7 @@ void GameRender()
 	currentEngine->SetRenderTarget();
 	currentEngine->Draw(rt, 0, 0);
 
-	//currentEngine->Draw(font2, L"~Текст работает 123 Hello~", 50, 50);
-	//currentEngine->Draw(font2, 50, 50);
+	currentEngine->Draw(font2, L"~Текст работает 123 Hello~", 50, 50, {255,0,60,255});
+	currentEngine->Draw(font2, 50, 70);
 }
 //-----------------------------------------------------------------------------
