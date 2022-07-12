@@ -5,8 +5,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #pragma warning(pop)
-TODO: вывод текста https://gist.github.com/benob/92ee64d9ffcaa5d3be95edbf4ded55f2
-мапинг клавиш
 //-----------------------------------------------------------------------------
 Engine* currentEngine = nullptr;
 //-----------------------------------------------------------------------------
@@ -32,10 +30,24 @@ bool Engine::Create(const EngineCreateInfo& createInfo)
 	if (!m_renderer)
 		return false;
 
+	SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_BLEND); // TODO: ????
+
 	if (createInfo.renderSize.x != 0 && createInfo.renderSize.y != 0)
 		SDL_RenderSetLogicalSize(m_renderer, createInfo.renderSize.x, createInfo.renderSize.y);
 
 	m_startTime = std::chrono::high_resolution_clock::now();
+
+	// заполнение клавиш (должно быть идентично порядку в GameKey
+	// TODO: из файла
+	m_keyMapping[SDLK_z] = GameKey::A;
+	m_keyMapping[SDLK_x] = GameKey::B;
+	m_keyMapping[SDLK_c] = GameKey::C;
+	m_keyMapping[SDLK_a] = GameKey::X;
+	m_keyMapping[SDLK_s] = GameKey::Y;
+	m_keyMapping[SDLK_UP] = GameKey::UP;
+	m_keyMapping[SDLK_DOWN] = GameKey::DOWN;
+	m_keyMapping[SDLK_LEFT] = GameKey::LEFT;
+	m_keyMapping[SDLK_RIGHT] = GameKey::RIGHT;
 
 	SDL_Log("Engine Init Success");
 	currentEngine = this;
@@ -72,26 +84,10 @@ bool Engine::Update()
 		case SDL_QUIT:
 			return false;
 		case SDL_KEYDOWN:
-			setKey(SDLK_z, GameKey::A, true);
-			setKey(SDLK_x, GameKey::B, true);
-			setKey(SDLK_c, GameKey::C, true);
-			setKey(SDLK_a, GameKey::X, true);
-			setKey(SDLK_s, GameKey::Y, true);
-			setKey(SDLK_UP, GameKey::UP, true);
-			setKey(SDLK_DOWN, GameKey::DOWN, true);
-			setKey(SDLK_LEFT, GameKey::LEFT, true);
-			setKey(SDLK_RIGHT, GameKey::RIGHT, true);
+			setKey(true);
 			break;
 		case SDL_KEYUP:
-			setKey(SDLK_z, GameKey::A, false);
-			setKey(SDLK_x, GameKey::B, false);
-			setKey(SDLK_c, GameKey::C, false);
-			setKey(SDLK_a, GameKey::X, false);
-			setKey(SDLK_s, GameKey::Y, false);
-			setKey(SDLK_UP, GameKey::UP, false);
-			setKey(SDLK_DOWN, GameKey::DOWN, false);
-			setKey(SDLK_LEFT, GameKey::LEFT, false);
-			setKey(SDLK_RIGHT, GameKey::RIGHT, false);
+			setKey(false);
 			break;
 		}
 	}
@@ -204,12 +200,15 @@ bool Engine::KeyPress(GameKey key)
 	return true;
 }
 //-----------------------------------------------------------------------------
-void Engine::setKey(SDL_Keycode sdlKey, GameKey gameKey, bool state)
+void Engine::setKey(bool state)
 {
-	if (m_sdlEvent.key.keysym.sym == sdlKey)
+	auto it = m_keyMapping.find(m_sdlEvent.key.keysym.sym);
+	if (it != m_keyMapping.end())
 	{
-		m_keyDown[static_cast<size_t>(gameKey)] = state;
-		if (!state) m_keyPress[static_cast<size_t>(gameKey)] = false;
+		const size_t id = static_cast<size_t>(it->second);
+
+		m_keyDown[id] = state;
+		if (!state) m_keyPress[id] = false;
 	}
 }
 //-----------------------------------------------------------------------------

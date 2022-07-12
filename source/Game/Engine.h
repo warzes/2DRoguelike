@@ -71,13 +71,17 @@ public:
 	bool KeyDown(GameKey key) const;
 	bool KeyPress(GameKey key);
 
+
+	SDL_Renderer* GetRenderer() { return m_renderer; } // TODO: delete
 private:
-	void setKey(SDL_Keycode sdlKey, GameKey gameKey, bool state);
+	void setKey(bool state);
 	SDL_Window* m_window = nullptr;
 	SDL_Renderer* m_renderer = nullptr;
 	SDL_Event m_sdlEvent = {};
 
 	std::unordered_map<std::string, Sprite> m_spriteCache;
+
+	std::map<SDL_Keycode, GameKey> m_keyMapping;
 
 	std::chrono::steady_clock::time_point m_startTime;
 	int64_t m_frameTimeCurrent = 0;

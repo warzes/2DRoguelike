@@ -11,6 +11,7 @@
 
 #include <chrono>
 #include <string>
+#include <map>
 #include <unordered_map>
 
 #pragma warning(pop)
