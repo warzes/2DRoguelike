@@ -1,11 +1,11 @@
 ﻿#include "stdafx.h"
 #include "Game.h"
 //-----------------------------------------------------------------------------
-void GameUpdate(float deltaTime)
+void Game::Update(float deltaTime)
 {
-	if (currentEngine->KeyDown(GameKey::A))
+	if (gEngine->KeyDown(GameKey::A))
 		PrintLog("A down");
-	if (currentEngine->KeyPress(GameKey::B))
+	if (gEngine->KeyPress(GameKey::B))
 		PrintLog("B press");
 }
 //-----------------------------------------------------------------------------

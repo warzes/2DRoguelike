@@ -1,23 +1,29 @@
 ﻿#include "stdafx.h"
 #include "Game.h"
 //-----------------------------------------------------------------------------
-RenderTarget rt;
-Sprite spr;
-Font font2;
+Game* gGame = nullptr;
 //-----------------------------------------------------------------------------
-bool GameInit()
+bool Game::Init()
 {
-	rt = currentEngine->CreateRenderTarget(480, 480);
-	spr = currentEngine->CreateSprite(FolderRoot + "data/floor.png");
-	font2 = currentEngine->CreateFont(FolderRoot + "data/OpenSans-Regular.ttf", 32);
+	gGame = this;
+	m_viewMap = gEngine->CreateRenderTarget(GameConstant::ViewMapSize, GameConstant::ViewMapSize);
+	m_tileset00 = gEngine->CreateSprite(FolderRoot + "data/Textures-16.png");
+
+	m_worldData = new World();
+
+	spr = gEngine->CreateSprite(FolderRoot + "data/floor.png");
+	font2 = gEngine->CreateFont(FolderRoot + "data/OpenSans-Regular.ttf", 32);
 
 	return true;
 }
 //-----------------------------------------------------------------------------
-void GameClose()
+void Game::Close()
 {
-	currentEngine->DestroyResource(font2);
-	currentEngine->DestroyResource(rt);
-	currentEngine->DestroyResource(spr);
+	delete m_worldData;
+	gEngine->DestroyResource(font2);
+	gEngine->DestroyResource(m_viewMap);
+	gEngine->DestroyResource(spr);
+	gEngine->DestroyResource(m_tileset00);
+	gGame = nullptr;
 }
 //-----------------------------------------------------------------------------

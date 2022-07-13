@@ -1,23 +1,25 @@
 ﻿#include "stdafx.h"
 #include "Game.h"
 //-----------------------------------------------------------------------------
-void GameRender()
+void Game::Render()
 {
-	currentEngine->SetRenderTarget(rt, {120,0,0,255});
-	for (int x = 0; x < 15; x++)
-	{
-		for (int y = 0; y < 15; y++)
-		{
-			const int posX = x * spr.width;
-			const int posY = y * spr.height;
-			currentEngine->Draw(spr, posX, posY);
-		}
-	}
+	// Set Map View Render Target
+	gEngine->SetRenderTarget(m_viewMap);
+	//for (int x = 0; x < 15; x++)
+	//{
+	//	for (int y = 0; y < 15; y++)
+	//	{
+	//		const int posX = x * spr.width;
+	//		const int posY = y * spr.height;
+	//		gEngine->Draw(spr, posX, posY);
+	//	}
+	//}
 
-	currentEngine->SetRenderTarget();
-	currentEngine->Draw(rt, 0, 0);
+	// Set Main Render Target
+	gEngine->SetRenderTarget({100,100,255,255});
+	gEngine->Draw(m_viewMap, 0, 0);
 
-	currentEngine->Draw(font2, L"~Текст работает 123 Hello~", 50, 50, {255,0,60,255});
-	currentEngine->Draw(font2, 50, 70);
+	gEngine->Draw(font2, L"~Текст работает 123 Hello~", 50, 50, {255,0,60,255});
+	gEngine->Draw(font2, 50, 70);
 }
 //-----------------------------------------------------------------------------

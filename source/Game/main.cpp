@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "Engine.h"
+#include "Game.h"
 //-----------------------------------------------------------------------------
 #if defined(_MSC_VER)
 #pragma comment( lib, "SDL2.lib" )
@@ -11,17 +12,13 @@
 для каждого элемента своя рендертекстура. то есть например карта рендерится в квадрат 240х240, а например гуи поля боя в 640х480. это позволит делать ретро стиль карты, но при этом нормально выводить большие спрайты в бою или текст в диалогах.
 */
 //-----------------------------------------------------------------------------
-bool GameInit();
-void GameUpdate(float deltaTime);
-void GameRender();
-void GameClose();
+
 #if defined(__EMSCRIPTEN__)
 void UpdateDrawFrame()
 {
-	bool isRunning = currentEngine->Update();
-	// TODO: выход если !isRunning
-	GameUpdate(currentEngine->GetDeltaTime());
-	GameRender();
+	if (!gEngine->Update()) emscripten_cancel_main_loop();
+	gGame->Update(gEngine->GetDeltaTime());
+	gGame->Render();
 }
 #endif
 //-----------------------------------------------------------------------------
@@ -37,19 +34,21 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 	}; };
 	if (engine.Create(getConfig()))
 	{
-		if (GameInit())
+		Game game;
+
+		if (game.Init())
 		{
 #if defined(__EMSCRIPTEN__)
 			emscripten_set_main_loop(UpdateDrawFrame, 0, 1);
 #else
 			while (engine.Update())
 			{
-				GameUpdate(engine.GetDeltaTime());
-				GameRender();
+				game.Update(engine.GetDeltaTime());
+				game.Render();
 			}
 #endif
 		}
-		GameClose();
+		game.Close();
 	}
 	engine.Destroy();
 	return 0;

@@ -33,12 +33,13 @@ constexpr uint32_t charCountRUS = 0x452 - 0x400;
 
 struct Font
 {
-	float size = 0;
-	int atlasSize = 256;
+	int size = 0;
+	uint32_t atlasSize = 256;
+
+	SDL_Texture* atlas = nullptr;
 
 	stbtt_fontinfo info;
 	stbtt_packedchar charInfo[charCountENG + charCountRUS];
-	SDL_Texture* atlas = nullptr;
 
 	float scale = 0.0f;
 	int ascent = 0;
@@ -91,6 +92,7 @@ public:
 
 	void Draw(const RenderTarget& rt, int posX, int posY) const;
 	void Draw(const Sprite& sprite, int posX, int posY) const;
+	void Draw(const Sprite& sprite, int posX, int posY, const SDL_Rect& rect) const;
 	void Draw(const Font& font, const std::wstring& text, int posX, int posY, const Color& color = { 0,0,0,255 }) const;
 	void Draw(const Font& fontAtlas, int posX, int posY, const Color& color = { 0,0,0,255 }) const; // отрисовка атласа
 
@@ -101,7 +103,6 @@ public:
 	bool KeyDown(GameKey key) const;
 	bool KeyPress(GameKey key);
 
-	SDL_Renderer* GetRenderer() { return m_renderer; } // TODO: delete
 private:
 	void setKey(bool state);
 	size_t getFontIndex(int ch) const;
@@ -130,4 +131,4 @@ private:
 	} m_unused;
 };
 
-extern Engine* currentEngine;
+extern Engine* gEngine;

@@ -14,7 +14,7 @@
 #pragma warning(pop)
 #endif
 //-----------------------------------------------------------------------------
-Engine* currentEngine = nullptr;
+Engine* gEngine = nullptr;
 //-----------------------------------------------------------------------------
 void PrintLog(const std::string& text)
 {
@@ -75,13 +75,13 @@ bool Engine::Create(const EngineCreateInfo& createInfo)
 	m_keyMapping[SDLK_RIGHT] = GameKey::RIGHT;
 
 	PrintLog("Engine Init Success");
-	currentEngine = this;
+	gEngine = this;
 	return true;
 }
 //-----------------------------------------------------------------------------
 void Engine::Destroy()
 {
-	currentEngine = nullptr;
+	gEngine = nullptr;
 	for (auto it = m_spriteCache.begin(); it != m_spriteCache.end(); it++)
 		SDL_DestroyTexture(it->second.texture);
 	m_spriteCache.clear();
@@ -183,8 +183,9 @@ Font Engine::CreateFont(const std::string& fileName, int fontSize)
 		SDL_RWops* rw = SDL_RWFromFile(fileName.c_str(), "rb");
 		if (!rw) return {};
 		const Sint64 fileSize = SDL_RWsize(rw);
-		auto bufferBytes = std::vector<uint8_t>(fileSize);
-		if (SDL_RWread(rw, bufferBytes.data(), fileSize, 1) != 1) return {};
+		if (fileSize < 0) return {};
+		auto bufferBytes = std::vector<uint8_t>(static_cast<size_t>(fileSize));
+		if (SDL_RWread(rw, bufferBytes.data(), static_cast<size_t>(fileSize), 1) != 1) return {};
 		SDL_RWclose(rw);
 
 		Font font;
@@ -197,27 +198,27 @@ Font Engine::CreateFont(const std::string& fileName, int fontSize)
 
 		// fill bitmap atlas with packed characters
 		stbtt_pack_context pack_context;
-		stbtt_PackBegin(&pack_context, atlasData.get(), font.atlasSize, font.atlasSize, 0, 1, nullptr);
+		stbtt_PackBegin(&pack_context, atlasData.get(), (int)font.atlasSize, (int)font.atlasSize, 0, 1, nullptr);
 		//stbtt_PackSetOversampling(&pack_context, 1, 1);
-		stbtt_PackFontRange(&pack_context, bufferBytes.data(), 0, font.size, firstCharENG, charCountENG, font.charInfo);
-		stbtt_PackFontRange(&pack_context, bufferBytes.data(), 0, font.size, firstCharRUS, charCountRUS, font.charInfo + charCountENG);
+		stbtt_PackFontRange(&pack_context, bufferBytes.data(), 0, (float)font.size, firstCharENG, charCountENG, font.charInfo);
+		stbtt_PackFontRange(&pack_context, bufferBytes.data(), 0, (float)font.size, firstCharRUS, charCountRUS, font.charInfo + charCountENG);
 		stbtt_PackEnd(&pack_context);
 
 		// convert bitmap to texture
-		font.atlas = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, font.atlasSize, font.atlasSize);
+		font.atlas = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, (int)font.atlasSize, (int)font.atlasSize);
 		SDL_SetTextureBlendMode(font.atlas, SDL_BLENDMODE_BLEND);
 		auto pixels = std::make_unique<Uint32[]>(font.atlasSize * font.atlasSize);
 
 		SDL_PixelFormat* format = SDL_AllocFormat(SDL_PIXELFORMAT_RGBA32);
-		for (int i = 0; i < font.atlasSize * font.atlasSize; i++)
+		for (uint32_t i = 0; i < font.atlasSize * font.atlasSize; i++)
 			pixels[i] = SDL_MapRGBA(format, 0xff, 0xff, 0xff, atlasData[i]);
 		SDL_FreeFormat(format);
-		SDL_UpdateTexture(font.atlas, nullptr, pixels.get(), font.atlasSize * sizeof(Uint32));
+		SDL_UpdateTexture(font.atlas, nullptr, pixels.get(), (int)(font.atlasSize * sizeof(Uint32)));
 
 		// setup additional info
-		font.scale = stbtt_ScaleForPixelHeight(&font.info, font.size);
+		font.scale = stbtt_ScaleForPixelHeight(&font.info, (float)font.size);
 		stbtt_GetFontVMetrics(&font.info, &font.ascent, 0, 0);
-		font.baseline = (int)(font.ascent * font.scale);
+		font.baseline = (int)((float)font.ascent * font.scale);
 
 		m_fontCache[cacheName] = font;
 		return m_fontCache[cacheName];
@@ -274,19 +275,25 @@ void Engine::Draw(const Sprite& sprite, int posX, int posY) const
 	SDL_RenderCopy(m_renderer, sprite.texture, nullptr, &dst);
 }
 //-----------------------------------------------------------------------------
+void Engine::Draw(const Sprite& sprite, int posX, int posY, const SDL_Rect& rect) const
+{
+	const SDL_Rect dst = { posX, posY, rect.w, rect.h };
+	SDL_RenderCopy(m_renderer, sprite.texture, &rect, &dst);
+}
+//-----------------------------------------------------------------------------
 void Engine::Draw(const Font& font, const std::wstring& text, int posX, int posY, const Color& color) const
 {
 	SDL_SetTextureColorMod(font.atlas, color.r, color.g, color.b);
 	SDL_SetTextureAlphaMod(font.atlas, color.a);
-	for (int i = 0; text[i]; i++)
+	for (size_t i = 0; i < text.size(); i++)
 	{
-		int index = getFontIndex(text[i]);
+		size_t index = getFontIndex(text[i]);
 		const stbtt_packedchar& info = font.charInfo[index];
 		SDL_Rect src_rect = { info.x0, info.y0, info.x1 - info.x0, info.y1 - info.y0 };
 		SDL_Rect dst_rect = { posX + (int)info.xoff, posY + (int)info.yoff, (int)(info.x1 - info.x0), (int)(info.y1 - info.y0) };
 
 		SDL_RenderCopy(m_renderer, font.atlas, &src_rect, &dst_rect);
-		posX += info.xadvance;
+		posX += (int)info.xadvance;
 	}
 }
 //-----------------------------------------------------------------------------
@@ -294,16 +301,16 @@ void Engine::Draw(const Font& fontAtlas, int posX, int posY, const Color& color)
 {
 	SDL_SetTextureColorMod(fontAtlas.atlas, color.r, color.g, color.b);
 	SDL_SetTextureAlphaMod(fontAtlas.atlas, color.a);
-	const SDL_Rect dest = { posX, posY, fontAtlas.atlasSize, fontAtlas.atlasSize };
+	const SDL_Rect dest = { posX, posY, (int)fontAtlas.atlasSize, (int)fontAtlas.atlasSize };
 	SDL_RenderCopy(m_renderer, fontAtlas.atlas, nullptr, &dest);
 }
 //-----------------------------------------------------------------------------
 float Engine::MeasureText(const Font& font, const std::wstring& text) const
 {
 	float width = 0.0f;
-	for (int i = 0; text[i]; i++)
+	for (size_t i = 0; i < text.size(); i++)
 	{
-		int index = getFontIndex(text[i]);
+		size_t index = getFontIndex(text[i]);
 		const stbtt_packedchar& info = font.charInfo[index];
 		width += info.xadvance;
 	}
@@ -337,7 +344,7 @@ void Engine::setKey(bool state)
 //-----------------------------------------------------------------------------
 size_t Engine::getFontIndex(int ch) const
 {
-	int index = 0;
+	size_t index = 0;
 	if (ch >= firstCharENG && ch < firstCharENG + charCountENG)
 		index = ch - firstCharENG;
 	else if (ch >= firstCharRUS && ch < firstCharRUS + charCountRUS)

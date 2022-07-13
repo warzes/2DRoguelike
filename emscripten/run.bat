@@ -1,1 +1,1 @@
-emrun ../bin/game.html
+emrun ../bin/index.html

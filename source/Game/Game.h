@@ -1,8 +1,24 @@
 #pragma once
 
-#include "Engine.h"
+#include "GameData.h"
 
-extern RenderTarget rt;
-extern Sprite spr;
+class Game
+{
+public:
+	bool Init();
+	void Close();
 
-extern Font font2;
+	void Update(float deltaTime);
+	void Render();
+
+private:
+	RenderTarget m_viewMap;
+	Sprite m_tileset00;
+
+	World* m_worldData;
+
+	Sprite spr;
+	Font font2;
+};
+
+extern Game* gGame;
